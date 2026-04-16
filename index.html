@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jannah — جنّة | أناشيد بلا موسيقى</title>
+  <meta name="description" content="Jannah جنّة — تطبيق الأناشيد والأغاني اللاموسيقية. روحانية خالصة، صوت نقيّ." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #000000;
+      --fg: #ffffff;
+      --accent: #4DFFA3;
+      --accent-glow: rgba(77, 255, 163, 0.18);
+      --accent-dim: rgba(77, 255, 163, 0.08);
+      --border: rgba(255,255,255,0.07);
+      --muted: rgba(255,255,255,0.38);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Amiri', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      direction: rtl;
+    }
+
+    #geo-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.18;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(77,255,163,0.22) 0%, transparent 70%);
+      top: -100px; left: -150px;
+      animation: drift1 18s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(77,255,163,0.12) 0%, transparent 70%);
+      bottom: -80px; right: -100px;
+      animation: drift2 22s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { from { transform: translate(0,0); } to { transform: translate(60px, 80px); } }
+    @keyframes drift2 { from { transform: translate(0,0); } to { transform: translate(-50px,-60px); } }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .page {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 48px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(0,0,0,0.55);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid rgba(77,255,163,0.3);
+      box-shadow: 0 0 12px rgba(77,255,163,0.2);
+    }
+    .nav-name {
+      font-family: 'Scheherazade New', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .nav-name span { color: var(--accent); }
+    .nav-badge {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(77,255,163,0.35);
+      padding: 5px 14px;
+      border-radius: 100px;
+      background: var(--accent-dim);
+    }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 32px 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .arch-ring {
+      position: relative;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .arch-ring::before,
+    .arch-ring::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(77,255,163,0.2);
+    }
+    .arch-ring::before {
+      width: 160px; height: 160px;
+      animation: ring-pulse 4s ease-in-out infinite;
+    }
+    .arch-ring::after {
+      width: 210px; height: 210px;
+      animation: ring-pulse 4s ease-in-out infinite 0.8s;
+    }
+    @keyframes ring-pulse {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.03); }
+    }
+
+    .app-icon {
+      width: 120px; height: 120px;
+      border-radius: 28px;
+      object-fit: cover;
+      border: 1.5px solid rgba(77,255,163,0.4);
+      box-shadow:
+        0 0 0 6px rgba(77,255,163,0.06),
+        0 0 60px rgba(77,255,163,0.25),
+        0 20px 60px rgba(0,0,0,0.8);
+      animation: icon-float 6s ease-in-out infinite;
+      position: relative;
+      z-index: 2;
+    }
+    @keyframes icon-float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .bismillah {
+      font-family: 'Scheherazade New', serif;
+      font-size: 1.1rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-bottom: 28px;
+      animation: fadeUp 1.2s ease forwards;
+      opacity: 0;
+      animation-delay: 0.2s;
+    }
+
+    .hero-title {
+      font-family: 'Scheherazade New', serif;
+      font-size: clamp(4.5rem, 12vw, 9rem);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ffffff 30%, rgba(255,255,255,0.55) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeUp 1s ease forwards;
+      opacity: 0;
+      animation-delay: 0.4s;
+    }
+
+    .hero-en {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-weight: 300;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 32px;
+      animation: fadeUp 1s ease forwards;
+      opacity: 0;
+      animation-delay: 0.6s;
+    }
+
+    .hero-tagline {
+      font-family: 'Amiri', serif;
+      font-size: clamp(1.05rem, 2.5vw, 1.4rem);
+      color: rgba(255,255,255,0.68);
+      max-width: 520px;
+      line-height: 2;
+      margin-bottom: 56px;
+      animation: fadeUp 1s ease forwards;
+      opacity: 0;
+      animation-delay: 0.8s;
+    }
+    .hero-tagline strong {
+      color: var(--accent);
+      font-weight: 400;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 1s ease forwards;
+      opacity: 0;
+      animation-delay: 1s;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      color: #000;
+      font-family: 'Amiri', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 14px 32px;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 0 30px rgba(77,255,163,0.35);
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+    .btn-primary:hover::before { transform: translateX(100%); }
+    .btn-primary:hover {
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 0 50px rgba(77,255,163,0.55);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      color: var(--fg);
+      font-family: 'Amiri', serif;
+      font-size: 1.05rem;
+      padding: 13px 28px;
+      border-radius: 100px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+      border-color: rgba(77,255,163,0.4);
+      background: var(--accent-dim);
+    }
+
+    .divider {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(77,255,163,0.25), transparent);
+    }
+
+    .features {
+      padding: 80px 32px;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Scheherazade New', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 56px;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-dim), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover {
+      border-color: rgba(77,255,163,0.25);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 18px;
+      display: block;
+    }
+    .feature-title {
+      font-family: 'Scheherazade New', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--fg);
+    }
+    .feature-desc {
+      font-family: 'Amiri', serif;
+      font-size: 0.98rem;
+      line-height: 2;
+      color: var(--muted);
+    }
+
+    .quote-section {
+      padding: 60px 32px;
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .quote-mark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 5rem;
+      color: var(--accent);
+      line-height: 0.5;
+      margin-bottom: 20px;
+      display: block;
+      opacity: 0.5;
+    }
+    .quote-text {
+      font-family: 'Scheherazade New', serif;
+      font-size: clamp(1.2rem, 3vw, 1.7rem);
+      line-height: 2.2;
+      color: rgba(255,255,255,0.78);
+      font-style: italic;
+    }
+    .quote-src {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-top: 20px;
+      text-transform: uppercase;
+    }
+
+    .coming-soon {
+      margin: 0 32px 80px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      background: linear-gradient(135deg, rgba(77,255,163,0.06) 0%, rgba(77,255,163,0.02) 100%);
+      border: 1px solid rgba(77,255,163,0.2);
+      border-radius: 24px;
+      padding: 52px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .coming-soon::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 50%; transform: translateX(-50%);
+      width: 180px; height: 1px;
+      background: var(--accent);
+      box-shadow: 0 0 20px rgba(77,255,163,0.6);
+    }
+    .cs-pill {
+      display: inline-block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(77,255,163,0.3);
+      background: rgba(77,255,163,0.07);
+      padding: 5px 16px;
+      border-radius: 100px;
+      margin-bottom: 22px;
+    }
+    .cs-title {
+      font-family: 'Scheherazade New', serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .cs-sub {
+      font-family: 'Amiri', serif;
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 2;
+      max-width: 480px;
+      margin: 0 auto 32px;
+    }
+    .version-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.45);
+    }
+    .version-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: blink 2s ease infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-brand {
+      font-family: 'Scheherazade New', serif;
+      font-size: 1.05rem;
+      color: var(--muted);
+    }
+    .footer-brand span { color: var(--accent); }
+    .footer-copy {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.25);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .star-ornament {
+      text-align: center;
+      color: var(--accent);
+      font-size: 1.4rem;
+      opacity: 0.5;
+      margin: 8px 0 32px;
+      letter-spacing: 0.5em;
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 20px 24px; }
+      .hero { padding: 60px 20px 40px; }
+      .features { padding: 60px 20px; }
+      .coming-soon { padding: 40px 24px; margin: 0 20px 60px; }
+      footer { padding: 24px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <canvas id="geo-canvas"></canvas>
+
+  <div class="page">
+
+    <nav>
+      <div class="nav-logo">
+        <img class="nav-icon"
+          src="https://cdn.jsdelivr.net/gh/yaprakJ/icon@main/app_icon.webp"
+          alt="Jannah Icon"
+          onerror="this.style.display='none'" />
+        <span class="nav-name">جنّة <span>Jannah</span></span>
+      </div>
+      <span class="nav-badge">قريباً • Coming Soon</span>
+    </nav>
+
+    <section class="hero">
+      <p class="bismillah">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ</p>
+
+      <div class="arch-ring">
+        <img
+          class="app-icon"
+          src="https://cdn.jsdelivr.net/gh/yaprakJ/icon@main/app_icon.webp"
+          alt="Jannah App"
+          onerror="this.style.background='rgba(77,255,163,0.1)'" />
+      </div>
+
+      <h1 class="hero-title">جنّة</h1>
+      <p class="hero-en">Jannah</p>
+
+      <p class="hero-tagline">
+        أناشيد وأغانٍ <strong>بلا موسيقى</strong> — صوت النفس
+        حين تبحث عن السكينة والجمال الروحاني الخالص
+      </p>
+
+      <div class="cta-group">
+        <span class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+          قريباً على متجر التطبيقات
+        </span>
+        <a href="#features" class="btn-secondary">
+          اكتشف أكثر
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="features" id="features">
+      <p class="section-label reveal">ما يميّزنا</p>
+      <h2 class="section-title reveal">تجربة روحانية فريدة</h2>
+
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <span class="feature-icon">🎙️</span>
+          <h3 class="feature-title">أصوات بلا موسيقى</h3>
+          <p class="feature-desc">مكتبة ضخمة من الأناشيد والأغاني اللاموسيقية، صافية وخالصة بلا أي مصاحبة آلية.</p>
+        </div>
+        <div class="feature-card reveal">
+          <span class="feature-icon">🌿</span>
+          <h3 class="feature-title">راحة القلب</h3>
+          <p class="feature-desc">محتوى ينعش الروح ويهدئ النفس — مختار بعناية لرحلتك الروحانية اليومية.</p>
+        </div>
+        <div class="feature-card reveal">
+          <span class="feature-icon">✨</span>
+          <h3 class="feature-title">تصميم أنيق</h3>
+          <p class="feature-desc">واجهة جميلة وسهلة بأسلوب عصري يعكس أصالة الكلمة وجمال المعنى.</p>
+        </div>
+        <div class="feature-card reveal">
+          <span class="feature-icon">📖</span>
+          <h3 class="feature-title">أقسام منظّمة</h3>
+          <p class="feature-desc">تصنيف احترافي حسب المنشد والنوع، مما يتيح لك الوصول السريع لما تبحث عنه.</p>
+        </div>
+        <div class="feature-card reveal">
+          <span class="feature-icon">❤️</span>
+          <h3 class="feature-title">مفضلاتك دائماً معك</h3>
+          <p class="feature-desc">احفظ الأناشيد الأقرب لقلبك واستمع إليها في أي وقت بضغطة واحدة.</p>
+        </div>
+        <div class="feature-card reveal">
+          <span class="feature-icon">🌙</span>
+          <h3 class="feature-title">لكل الأوقات</h3>
+          <p class="feature-desc">سواء في الفجر أو الغروب، عند الذكر أو الراحة — جنّة رفيقك في كل لحظة.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <div class="quote-section reveal">
+      <span class="quote-mark">"</span>
+      <p class="quote-text">إنَّ الصوتَ الجميلَ الذي يُرتَّل به القرآنُ يزيدُه حُسناً وبهاءً</p>
+      <p class="quote-src">— من هدي النبي ﷺ</p>
+    </div>
+
+    <div class="star-ornament reveal">✦ ✦ ✦</div>
+
+    <div class="coming-soon reveal">
+      <span class="cs-pill">الإصدار الأول — v1.0</span>
+      <h2 class="cs-title">قريباً في متناول يديك</h2>
+      <p class="cs-sub">
+        نعمل بحبّ وإتقان على تجربة تليق بروعة الكلمة الطيّبة.
+        كن أول من يعلم حين يُطلق التطبيق.
+      </p>
+      <div class="version-tag">
+        <span class="version-dot"></span>
+        Jannah v1.0 — Android
+      </div>
+    </div>
+
+    <footer>
+      <span class="footer-brand">جنّة <span>Jannah</span> • أناشيد بلا موسيقى</span>
+      <span class="footer-copy">© 2025 xStudio • All Rights Reserved</span>
+    </footer>
+
+  </div>
+
+  <script>
+    const canvas = document.getElementById('geo-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      drawGeometry();
+    }
+
+    function drawStar(cx, cy, r, points, color, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      for (let i = 0; i < points * 2; i++) {
+        const angle = (i * Math.PI) / points - Math.PI / 2;
+        const radius = i % 2 === 0 ? r : r * 0.4;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawHexGrid(cx, cy, size, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#4DFFA3';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(angle) * size, cy + Math.sin(angle) * size);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i;
+        const x = cx + Math.cos(angle) * size;
+        const y = cy + Math.sin(angle) * size;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawCircle(cx, cy, r, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#4DFFA3';
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawGeometry() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const W = canvas.width, H = canvas.height;
+
+      drawStar(W * 0.85, H * 0.12, 130, 8, '#4DFFA3', 0.6);
+      drawStar(W * 0.85, H * 0.12, 80, 8, '#4DFFA3', 0.4);
+
+      drawStar(W * 0.08, H * 0.78, 80, 8, '#4DFFA3', 0.5);
+      drawStar(W * 0.08, H * 0.78, 48, 8, '#4DFFA3', 0.35);
+
+      const hexCenters = [
+        [W*0.05, H*0.15], [W*0.10, H*0.24], [W*0.15, H*0.15]
+      ];
+      hexCenters.forEach(([x,y]) => drawHexGrid(x, y, 40, 0.45));
+
+      [60, 100, 140, 185].forEach(r => drawCircle(W*0.92, H*0.88, r, 0.3));
+
+      [[W*0.35, H*0.05, 30], [W*0.65, H*0.95, 24], [W*0.18, H*0.5, 20]].forEach(([x,y,r]) => {
+        drawStar(x, y, r, 6, '#4DFFA3', 0.4);
+      });
+
+      drawCircle(W*0.5, H*0.5, Math.min(W,H)*0.42, 0.07);
+      drawCircle(W*0.5, H*0.5, Math.min(W,H)*0.32, 0.05);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    document.querySelectorAll('.feature-card').forEach((card, i) => {
+      card.style.transitionDelay = `${i * 0.07}s`;
+    });
+  </script>
+</body>
+</html>
